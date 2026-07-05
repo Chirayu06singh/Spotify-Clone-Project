@@ -18,7 +18,6 @@ function secondsToMinutesSeconds(seconds) {
 }
 
 async function getSongs(folder) {
-    // Standardize the active directory string path 
     currFolder = folder.replaceAll("\\", "/");
     
     let a = await fetch(`/${currFolder}/`);
@@ -31,13 +30,11 @@ async function getSongs(folder) {
     for (let index = 0; index < as.length; index++) {
         const element = as[index];
         if (element.href.endsWith(".mp3")) {
-            // 1. Force the browser to decode the hidden %5C characters back into real backslashes
+           
             let decodedHref = decodeURIComponent(element.href);
             
-            // 2. NOW we can safely flip all backslashes into standard web forward slashes
             let normalizedPath = decodedHref.replaceAll("\\", "/");
             
-            // 3. Extract ONLY the clean trailing file name
             let pureFileName = normalizedPath.split("/").pop();
             
             songs.push(pureFileName);
@@ -49,7 +46,6 @@ async function getSongs(folder) {
     songUL.innerHTML = "";
     
     for (const song of songs) {
-        // Strip out codes and file extension tags exclusively for presentation
         let cleanDisplayName = decodeURIComponent(song).replace(".mp3", "");
         
         songUL.innerHTML += `
@@ -83,10 +79,8 @@ async function getSongs(folder) {
 }
 
 const playMusic = (track, pause = false) => {
-    // Explicitly clean parent folder string variables before joining path literals
     let cleanFolder = currFolder.replaceAll("\\", "/");
     
-    // Explicitly check for any accidental root slashes to construct an accurate URL path layout string
     currentSong.src = `/${cleanFolder}/${track}`;
     
     if (!pause) {
@@ -96,7 +90,6 @@ const playMusic = (track, pause = false) => {
         }
     }
     
-    // Clean up display labels on player visual bar UI fields
     document.querySelector(".songinfo").innerHTML = decodeURI(track).replace(".mp3", "");
     document.querySelector(".songtime").innerHTML = "00:00 / 00:00";
 }
@@ -117,29 +110,22 @@ async function displayAlbums() {
     for (let index = 0; index < array.length; index++) {
         const e = array[index];
         
-        // Grab the RAW attribute
         let rawHref = e.getAttribute("href");
         
-        // Skip empty links, parent directories, or hidden files
         if (!rawHref || rawHref === "../" || rawHref === "/" || rawHref.includes(".htaccess")) {
             continue;
         }
 
-        // CRITICAL FIX: Decode any %5C and flip all backslashes to forward slashes first
         let normalizedUrl = decodeURIComponent(rawHref).replaceAll("\\", "/");
         
-        // NOW we can safely clean the path and extract just the folder name (e.g., "angry_mood")
         let cleanUrl = normalizedUrl.replace(/\/$/, ""); 
         let folder = cleanUrl.split("/").pop();
         
-        // Skip the root songs folder itself if it accidentally gets caught
         if (folder === "songs" || folder === "") continue;
 
         try {
-            // Fetch info.json using the absolute root path and our clean folder name
             let infoFetch = await fetch(`/songs/${folder}/info.json`);
             
-            // If there's no info.json, skip this folder gracefully instead of crashing
             if (!infoFetch.ok) {
                 console.log(`Skipping ${folder} - no info.json found`);
                 continue;
